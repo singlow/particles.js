@@ -241,7 +241,7 @@ var pJS = function(tag_id, params){
   pJS.fn.particle = function(color, opacity, position){
 
     /* size */
-    this.radius = (pJS.particles.size.random ? Math.random() : 1) * pJS.particles.size.value;
+    this.radius = (pJS.particles.size.random ? (Math.random() + 1)/2 : 1) * pJS.particles.size.value;
     if(pJS.particles.size.anim.enable){
       this.size_status = false;
       this.vs = pJS.particles.size.anim.speed / 100;
@@ -438,6 +438,17 @@ var pJS = function(tag_id, params){
 
       case 'polygon':
         pJS.fn.vendors.drawShape(
+          pJS.canvas.ctx,
+          p.x - radius / (pJS.particles.shape.polygon.nb_sides/3.5), // startX
+          p.y - radius / (2.66/3.5), // startY
+          radius*2.66 / (pJS.particles.shape.polygon.nb_sides/3), // sideLength
+          pJS.particles.shape.polygon.nb_sides, // sideCountNumerator
+          1 // sideCountDenominator
+        );
+      break;
+
+      case 'molecule':
+        pJS.fn.vendors.drawDots(
           pJS.canvas.ctx,
           p.x - radius / (pJS.particles.shape.polygon.nb_sides/3.5), // startX
           p.y - radius / (2.66/3.5), // startY
@@ -1259,6 +1270,46 @@ var pJS = function(tag_id, params){
     //c.stroke();
     c.fill();
     c.restore();
+
+  };
+
+  pJS.fn.vendors.drawDots = function(c, startX, startY, sideLength, sideCountNumerator, sideCountDenominator){
+
+    // By Programming Thomas - https://programmingthomas.wordpress.com/2013/04/03/n-sided-shapes/
+    var sideCount = sideCountNumerator * sideCountDenominator;
+    var decimalSides = sideCountNumerator / sideCountDenominator;
+    var interiorAngleDegrees = (180 * (decimalSides - 2)) / decimalSides;
+    var interiorAngle = Math.PI - Math.PI * interiorAngleDegrees / 180; // convert to radians
+    var primaryFill = c.fillStyle;
+
+    c.save();
+    c.beginPath();
+    c.translate(startX, startY);
+    c.moveTo(0,0);
+    for (var i = 0; i < sideCount; i++) {
+      c.lineTo(sideLength,0);
+      c.translate(sideLength,0);
+      c.rotate(interiorAngle);
+    }
+    c.stroke();
+    c.fill();
+    c.restore();
+    c.closePath();
+
+    c.save();
+    c.fillStyle = pJS.particles.shape.stroke.color;
+    c.translate(startX, startY);
+    var radius = sideLength/6;
+    for (var i = 0; i < sideCount; i++) {
+      c.beginPath();
+      c.arc(0, 0, radius, 0, Math.PI * 2, false);
+      c.fill();
+      c.translate(sideLength,0);
+      c.rotate(interiorAngle);
+    }
+    c.beginPath();
+    c.restore();
+    c.fillStyle = primaryFill;
 
   };
 
